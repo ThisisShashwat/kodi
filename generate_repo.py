@@ -99,14 +99,24 @@ def generate_repo():
     server_url = "https://thisisshashwat.github.io/kodi/"
     print(f"[*] Repository Server URL: {server_url}")
     
+    # Extract version from main addon.xml
+    plugin_addon_xml = os.path.join(WORKSPACE_DIR, "addon.xml")
+    plugin_version = "1.0.0"
+    if os.path.exists(plugin_addon_xml):
+        try:
+            tree = ET.parse(plugin_addon_xml)
+            plugin_version = tree.getroot().attrib.get('version', '1.0.0')
+        except:
+            pass
+            
     # 1. Package the main YoMovies Addon
     yomovies_files = {
-        "addon.xml": os.path.join(WORKSPACE_DIR, "addon.xml"),
+        "addon.xml": plugin_addon_xml,
         "default.py": os.path.join(WORKSPACE_DIR, "default.py"),
         "icon.png": os.path.join(WORKSPACE_DIR, "icon.png"),
         "fanart.jpg": os.path.join(WORKSPACE_DIR, "fanart.jpg")
     }
-    create_addon_zip("plugin.video.yomovies", "1.0.0", yomovies_files)
+    create_addon_zip("plugin.video.yomovies", plugin_version, yomovies_files)
     
     # 2. Package/Update the Repository Addon itself
     repo_dir = os.path.join(WORKSPACE_DIR, "repository.yomovies")
@@ -140,13 +150,22 @@ def generate_repo():
     with open(repo_addon_xml, "w", encoding="utf-8") as f:
         f.write(xml_content)
     print(f"[+] Updated local repository definition at: {repo_addon_xml}")
+    
+    # Extract version from repository addon.xml
+    repo_version = "1.0.0"
+    if os.path.exists(repo_addon_xml):
+        try:
+            tree = ET.parse(repo_addon_xml)
+            repo_version = tree.getroot().attrib.get('version', '1.0.0')
+        except:
+            pass
         
     repo_files = {
         "addon.xml": repo_addon_xml,
         "icon.png": os.path.join(WORKSPACE_DIR, "icon.png"),
         "fanart.jpg": os.path.join(WORKSPACE_DIR, "fanart.jpg")
     }
-    create_addon_zip("repository.yomovies", "1.0.0", repo_files)
+    create_addon_zip("repository.yomovies", repo_version, repo_files)
     
     # 3. Generate/Update the master addons.xml and addons.xml.md5
     print("\n[*] Compiling master addons.xml...")
