@@ -154,15 +154,10 @@ def unpack_dean_edwards(packed_str):
     return re.sub(r'\b\w+\b', replace_word, payload)
 
 def resolve_m3u8_playlist(master_url, referer_url):
-    """Fetches the master .m3u8. In Kodi mode, returns the master URL directly. In CLI, returns highest quality."""
+    """Fetches the master .m3u8, parses sub-playlists, and lets the user choose the quality."""
     if '.m3u8' not in master_url:
         return master_url
         
-    if KODI_MODE:
-        # Return the master playlist so Kodi's inputstream.adaptive can parse it natively
-        return master_url
-        
-    # CLI Mode: Extract highest quality for VLC
     content = fetch_html(master_url, referer=referer_url)
     if not content or '#EXT-X-STREAM-INF' not in content:
         return master_url
@@ -207,9 +202,45 @@ def resolve_m3u8_playlist(master_url, referer_url):
             current_bandwidth = 0
             
     if streams:
+        # Sort from highest quality to lowest
         streams.sort(key=lambda x: (x['width'] * x['height'], x['bandwidth']), reverse=True)
-        return streams[0]['url']
         
+        # If there is only one stream, play it directly
+        if len(streams) == 1:
+            return streams[0]['url']
+            
+        # Build quality labels
+        labels = []
+        for s in streams:
+            res = f"{s['width']}x{s['height']}" if s['width'] > 0 else "Unknown Resolution"
+            bw = f"{s['bandwidth'] / 1000000:.1f} Mbps" if s['bandwidth'] > 0 else "Adaptive"
+            labels.append(f"{res} ({bw})")
+            
+        if KODI_MODE:
+            # Show Kodi select dialog
+            dialog = xbmcgui.Dialog()
+            idx = dialog.select("Select Video Quality", labels)
+            if idx >= 0:
+                return streams[idx]['url']
+            else:
+                # User cancelled dialog
+                return "USER_CANCELLED"
+        else:
+            # Show CLI select
+            print("\nAvailable Qualities:")
+            for idx, label in enumerate(labels):
+                print(f"  [{idx+1}] {label}")
+            choice = input("Select quality (default 1): ").strip()
+            if not choice:
+                return streams[0]['url']
+            try:
+                idx = int(choice) - 1
+                if 0 <= idx < len(streams):
+                    return streams[idx]['url']
+            except ValueError:
+                pass
+            return streams[0]['url']
+            
     return master_url
 
 def resolve_stream_from_player(player_url, referer_url):
@@ -304,6 +335,8 @@ def resolve_movie(movie_url):
     for cand in player_candidates:
         print(f"[*] Trying server: {cand['label']}")
         stream_url = resolve_stream_from_player(cand['url'], movie_url)
+        if stream_url == "USER_CANCELLED":
+            return "USER_CANCELLED"
         if stream_url:
             return stream_url, cand['url']
             
@@ -583,22 +616,18 @@ if KODI_MODE:
             stream_info = resolve_movie(movie_url)
             p_dialog.close()
             
+            if stream_info == "USER_CANCELLED":
+                xbmcplugin.setResolvedUrl(int(sys.argv[1]), False, xbmcgui.ListItem())
+                return
+                
             if stream_info:
                 stream_url, embed_url = stream_info
                 
                 # Append headers using Kodi's standard pipe scheme
                 play_url = stream_url + '|Referer=' + urllib.parse.quote(embed_url) + '&User-Agent=' + urllib.parse.quote(USER_AGENT)
                 
-                # Create ListItem
+                # Create ListItem and resolve
                 list_item = xbmcgui.ListItem(path=play_url)
-                
-                # If HLS, configure to play adaptively in Kodi
-                if '.m3u8' in stream_url:
-                    list_item.setProperty('inputstream', 'inputstream.adaptive')
-                    list_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
-                    list_item.setMimeType('application/vnd.apple.mpegurl')
-                    list_item.setContentLookup(False)
-                
                 xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, list_item)
             else:
                 xbmcgui.Dialog().notification("YoMovies", "Failed to resolve stream link.", xbmcgui.NOTIFICATION_ERROR)
