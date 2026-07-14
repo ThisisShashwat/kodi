@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.log
+# Ignore temporary HTML test caches
+bollywood.html
+episode.html
+homepage.html
+search_results.html
+speedostream.html
+# Ignore root zip cache files
+plugin.video.yomovies.zip
+plugin.video.yomovies1.zip

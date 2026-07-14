@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addons><addon id="plugin.video.yomovies" name="YoMovies" version="1.0.0" provider-name="Antigravity">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0" />
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="default.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <summary lang="en">YoMovies Scraper and Stream Player</summary>
+    <description lang="en">Stream Bollywood, Hollywood, South Dubbed, and Web Series in maximum quality directly from YoMovies.</description>
+    <disclaimer lang="en">This addon scrapes content from yomovies.business. The author does not host or own any of the media.</disclaimer>
+    <license>GPL-2.0-only</license>
+    <assets>
+      <icon>icon.png</icon>
+      <fanart>fanart.jpg</fanart>
+    </assets>
+  </extension>
+</addon><addon id="repository.yomovies" name="YoMovies Repository" version="1.0.0" provider-name="Antigravity">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0" />
+  </requires>
+  <extension point="xbmc.addon.repository" name="YoMovies Repository">
+    <dir>
+      <info compressed="false">https://thisisshashwat.github.io/kodi/addons.xml</info>
+      <checksum>https://thisisshashwat.github.io/kodi/addons.xml.md5</checksum>
+      <datadir zip="true">https://thisisshashwat.github.io/kodi/</datadir>
+    </dir>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <summary lang="en">YoMovies Local Repository</summary>
+    <description lang="en">Install and auto-update the YoMovies video addon from your local PC server.</description>
+    <license>GPL-2.0-only</license>
+    <assets>
+      <icon>icon.png</icon>
+      <fanart>fanart.jpg</fanart>
+    </assets>
+  </extension>
+</addon></addons>
